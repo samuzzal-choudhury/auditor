@@ -1,0 +1,202 @@
+openapi: 3.0.0
+info:
+  title: Analytics Report API
+  version: '0.1'
+paths:
+  /liveness:
+    get:
+      tags:
+        - Service settings
+      operationId: f8a_admin.api_v1.get_liveness
+      summary: Get job service liveness
+      responses:
+        '200':
+          description: Service is alive
+  /readiness:
+    get:
+      tags:
+        - Service settings
+      operationId: f8a_admin.api_v1.get_readiness
+      summary: Get job service readiness
+      responses:
+        '200':
+          description: Service is ready
+  '/stack-analyses-overview/{from}/{to}':
+    get:
+      tags:
+        - Scan Services
+      operationId: f8a_scanner.api_v1.stack-analyses-overview
+      summary: >-
+        Get overview report for the stack analyses performed during a certain period
+      parameters:
+        - in: path
+          name: from
+          required: true
+          description: The time since when the stack analyses requests are to be considered for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss.
+          schema:
+            type: string
+        - in: path
+          name: to
+          required: true
+          description: The time until which the stack analyses requests are to be considered for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: a detailed report of the stack analyses requests processed and completed between the provided start and the end time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewReport'
+        '400':
+          description: Bad request.
+        '401':
+          description: Request unauthorized
+        '404':
+          description: Data not found
+servers:
+  - url: /api/v1/
+components:
+  schemas:
+    Metadata:
+      title: Metadata
+      description: Metadata for the report
+      properties:
+        report_version:
+          type: string
+    Companion:
+      title: Companion recommendations aggregation
+      description: Aggregation of companion dependency recommendations
+      properties:
+        recommendation_count:
+          type: string
+        positive_user_feedback_count:
+          type: string
+        negative_user_feedback_count:
+          type: string
+        maximum_confidence_score:
+          type: string
+        average_confidence_score:
+          type: string
+    StackAnalysesCountPerSource:
+      title: Stack analyses count
+      description: Application stack analyses count per source
+      properties:
+        osio:
+          type: string
+        vscode:
+          type: string
+    TopLargeStack:
+      title: Application Stack
+      description: Details of the appication stack
+      properties:
+        dependencies_count:
+          type: integer
+        dependencies_list:
+          type: array
+          items:
+            type: string
+        processing_time:
+          type: string
+    Recommendation:
+      title: Recommendations aggregation
+      description: Aggregation of all recommendations
+      properties:
+        companion:
+          $ref: '#/components/schemas/Companion'
+    StackAnalysesData:
+      title: Stack analyses data
+      description: Stack analyses details
+      properties:
+        analyzed_stacks_count:
+          type: string
+        analyzed_stacks_count_per_source:
+          $ref: '#/components/schemas/StackAnalysesCountPerSource'
+        unique_analyzed_stacks_count:
+          type: integer
+        top_large_stacks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopLargeStack'
+        top_dependencies_list:
+          type: array
+          items:
+            type: string
+        average_stack_processing_time:
+          type: string
+        unknown_dependencies_ingested:
+          type: integer
+        recommendation:
+          $ref: '#/components/schemas/Recommendation'
+    EcosystemData:
+      title: Ecosystem Data
+      description: Ecosystem specific stack analyses details
+      properties:
+        npm:
+          $ref: '#/components/schemas/StackAnalysesData'
+        maven:
+          $ref: '#/components/schemas/StackAnalysesData'
+        pypi:
+          $ref: '#/components/schemas/StackAnalysesData'
+    License:
+      title: License data
+      description: Aggregated license details for stack analyses
+      properties:
+        unknown_licenses_count:
+          type: integer
+        unknown_licenses_list:
+          type: array
+          items:
+            type: string
+        conflict_licenses_count:
+          type: integer
+        suggested_stack_licenses_count:
+          type: integer
+    Security:
+      title: Security vulnerability data
+      description: Security vulnerability data
+      properties:
+        vulnerable_stacks_count:
+          type: integer
+        highly_vulnerable_stacks_count:
+          type: integer
+    AggregatedData:
+      title: Aggregated stack analyses data
+      description: Aggregated stack analyses data across all supported ecosystems
+      properties:
+        analyzed_stacks_count:
+          type: integer
+        analyzed_stacks_count_per_source:
+          $ref: '#/components/schemas/StackAnalysesCountPerSource'
+        unique_analyzed_stacks_count:
+          type: integer
+        average_stack_processing_time:
+          type: string
+        unknown_dependencies_ingested:
+          type: integer
+        license:
+          $ref: '#/components/schemas/License'
+        security:
+          $ref: '#/components/schemas/Security'
+        recommendation:
+          $ref: '#/components/schemas/Recommendation'
+    OverviewReport:
+      title: Stack Analyses Overview Report
+      description: Stack Analyses Overview Report
+      properties:
+        meta:
+          $ref: '#/components/schemas/Metadata'
+        generation_time:
+          type: string
+          description: UTC time of the report generation in the format yyyy-mm-ddThh:mm:ss
+        from:
+          type: string
+          description: time since when the stack analyses requests are to be considered for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss
+        to:
+          type: string
+          description: time until which the stack analyses requests are to be considered for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss
+        ecosystem_data:
+          $ref: '#/components/schemas/EcosystemData'
+        aggregated_data:
+          $ref: '#/components/schemas/AggregatedData'
+
