@@ -1,0 +1,505 @@
+---
+swagger: "2.0"
+info:
+  version: "0.1"
+  title: "Aggregated Stack Analyses Report"
+basePath: "/api/v1/"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /liveness:
+    get:
+      tags:
+      - "Service settings"
+      summary: "Get job service liveness"
+      operationId: "f8a_admin_api_v1_get_liveness"
+      parameters: []
+      responses:
+        200:
+          description: "Service is alive"
+      x-swagger-router-controller: "swagger_server.controllers.service_settings_controller"
+  /readiness:
+    get:
+      tags:
+      - "Service settings"
+      summary: "Get job service readiness"
+      operationId: "f8a_admin_api_v1_get_readiness"
+      parameters: []
+      responses:
+        200:
+          description: "Service is ready"
+      x-swagger-router-controller: "swagger_server.controllers.service_settings_controller"
+  /stack-analyses-overview/{start_ts}/{end_ts}:
+    get:
+      tags:
+      - "Scan Services"
+      summary: "Get overview report for the stack analyses performed during a certain\
+        \ period"
+      operationId: "f8a_scanner_api_v1_stack_analyses_overview"
+      parameters:
+      - name: "start_ts"
+        in: "path"
+        description: "The time since when the stack analyses requests are to be considered\
+          \ for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss."
+        required: true
+        type: "string"
+      - name: "end_ts"
+        in: "path"
+        description: "The time until which the stack analyses requests are to be considered\
+          \ for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "a detailed report of the stack analyses requests processed\
+            \ and completed between the provided start and the end time"
+          schema:
+            $ref: "#/definitions/OverviewReport"
+        400:
+          description: "Bad request"
+        401:
+          description: "Request unauthorized"
+        404:
+          description: "Data not found"
+      x-swagger-router-controller: "swagger_server.controllers.scan_services_controller"
+definitions:
+  Metadata:
+    properties:
+      report_version:
+        type: "string"
+    title: "Metadata"
+    description: "Metadata for the report"
+    example:
+      report_version: "report_version"
+  Companion:
+    properties:
+      recommendation_count:
+        type: "string"
+      positive_user_feedback_count:
+        type: "string"
+      negative_user_feedback_count:
+        type: "string"
+      maximum_confidence_score:
+        type: "string"
+      average_confidence_score:
+        type: "string"
+    title: "Companion recommendations aggregation"
+    description: "Aggregation of companion dependency recommendations"
+    example:
+      recommendation_count: "recommendation_count"
+      maximum_confidence_score: "maximum_confidence_score"
+      negative_user_feedback_count: "negative_user_feedback_count"
+      average_confidence_score: "average_confidence_score"
+      positive_user_feedback_count: "positive_user_feedback_count"
+  StackAnalysesCountPerSource:
+    properties:
+      osio:
+        type: "string"
+      vscode:
+        type: "string"
+    title: "Stack analyses count"
+    description: "Application stack analyses count per source"
+    example:
+      vscode: "vscode"
+      osio: "osio"
+  TopLargeStack:
+    properties:
+      dependencies_count:
+        type: "integer"
+      dependencies_list:
+        type: "array"
+        items:
+          type: "string"
+      processing_time:
+        type: "string"
+    title: "Application Stack"
+    description: "Details of the appication stack"
+    example:
+      dependencies_count: 6
+      processing_time: "processing_time"
+      dependencies_list:
+      - "dependencies_list"
+      - "dependencies_list"
+  Recommendation:
+    properties:
+      companion:
+        $ref: "#/definitions/Companion"
+    title: "Recommendations aggregation"
+    description: "Aggregation of all recommendations"
+    example:
+      companion:
+        recommendation_count: "recommendation_count"
+        maximum_confidence_score: "maximum_confidence_score"
+        negative_user_feedback_count: "negative_user_feedback_count"
+        average_confidence_score: "average_confidence_score"
+        positive_user_feedback_count: "positive_user_feedback_count"
+  StackAnalysesData:
+    properties:
+      analyzed_stacks_count:
+        type: "string"
+      analyzed_stacks_count_per_source:
+        $ref: "#/definitions/StackAnalysesCountPerSource"
+      unique_analyzed_stacks_count:
+        type: "integer"
+      top_large_stacks:
+        type: "array"
+        items:
+          $ref: "#/definitions/TopLargeStack"
+      top_dependencies_list:
+        type: "array"
+        items:
+          type: "string"
+      average_stack_processing_time:
+        type: "string"
+      unknown_dependencies_ingested:
+        type: "integer"
+      recommendation:
+        $ref: "#/definitions/Recommendation"
+    title: "Stack analyses data"
+    description: "Stack analyses details"
+    example:
+      analyzed_stacks_count: "analyzed_stacks_count"
+      analyzed_stacks_count_per_source:
+        vscode: "vscode"
+        osio: "osio"
+      top_dependencies_list:
+      - "top_dependencies_list"
+      - "top_dependencies_list"
+      unknown_dependencies_ingested: 1
+      top_large_stacks:
+      - dependencies_count: 6
+        processing_time: "processing_time"
+        dependencies_list:
+        - "dependencies_list"
+        - "dependencies_list"
+      - dependencies_count: 6
+        processing_time: "processing_time"
+        dependencies_list:
+        - "dependencies_list"
+        - "dependencies_list"
+      unique_analyzed_stacks_count: 0
+      recommendation:
+        companion:
+          recommendation_count: "recommendation_count"
+          maximum_confidence_score: "maximum_confidence_score"
+          negative_user_feedback_count: "negative_user_feedback_count"
+          average_confidence_score: "average_confidence_score"
+          positive_user_feedback_count: "positive_user_feedback_count"
+      average_stack_processing_time: "average_stack_processing_time"
+  EcosystemData:
+    properties:
+      npm:
+        $ref: "#/definitions/StackAnalysesData"
+      maven:
+        $ref: "#/definitions/StackAnalysesData"
+      pypi:
+        $ref: "#/definitions/StackAnalysesData"
+    title: "Ecosystem Data"
+    description: "Ecosystem specific stack analyses details"
+    example:
+      maven:
+        analyzed_stacks_count: "analyzed_stacks_count"
+        analyzed_stacks_count_per_source:
+          vscode: "vscode"
+          osio: "osio"
+        top_dependencies_list:
+        - "top_dependencies_list"
+        - "top_dependencies_list"
+        unknown_dependencies_ingested: 1
+        top_large_stacks:
+        - dependencies_count: 6
+          processing_time: "processing_time"
+          dependencies_list:
+          - "dependencies_list"
+          - "dependencies_list"
+        - dependencies_count: 6
+          processing_time: "processing_time"
+          dependencies_list:
+          - "dependencies_list"
+          - "dependencies_list"
+        unique_analyzed_stacks_count: 0
+        recommendation:
+          companion:
+            recommendation_count: "recommendation_count"
+            maximum_confidence_score: "maximum_confidence_score"
+            negative_user_feedback_count: "negative_user_feedback_count"
+            average_confidence_score: "average_confidence_score"
+            positive_user_feedback_count: "positive_user_feedback_count"
+        average_stack_processing_time: "average_stack_processing_time"
+      pypi:
+        analyzed_stacks_count: "analyzed_stacks_count"
+        analyzed_stacks_count_per_source:
+          vscode: "vscode"
+          osio: "osio"
+        top_dependencies_list:
+        - "top_dependencies_list"
+        - "top_dependencies_list"
+        unknown_dependencies_ingested: 1
+        top_large_stacks:
+        - dependencies_count: 6
+          processing_time: "processing_time"
+          dependencies_list:
+          - "dependencies_list"
+          - "dependencies_list"
+        - dependencies_count: 6
+          processing_time: "processing_time"
+          dependencies_list:
+          - "dependencies_list"
+          - "dependencies_list"
+        unique_analyzed_stacks_count: 0
+        recommendation:
+          companion:
+            recommendation_count: "recommendation_count"
+            maximum_confidence_score: "maximum_confidence_score"
+            negative_user_feedback_count: "negative_user_feedback_count"
+            average_confidence_score: "average_confidence_score"
+            positive_user_feedback_count: "positive_user_feedback_count"
+        average_stack_processing_time: "average_stack_processing_time"
+      npm:
+        analyzed_stacks_count: "analyzed_stacks_count"
+        analyzed_stacks_count_per_source:
+          vscode: "vscode"
+          osio: "osio"
+        top_dependencies_list:
+        - "top_dependencies_list"
+        - "top_dependencies_list"
+        unknown_dependencies_ingested: 1
+        top_large_stacks:
+        - dependencies_count: 6
+          processing_time: "processing_time"
+          dependencies_list:
+          - "dependencies_list"
+          - "dependencies_list"
+        - dependencies_count: 6
+          processing_time: "processing_time"
+          dependencies_list:
+          - "dependencies_list"
+          - "dependencies_list"
+        unique_analyzed_stacks_count: 0
+        recommendation:
+          companion:
+            recommendation_count: "recommendation_count"
+            maximum_confidence_score: "maximum_confidence_score"
+            negative_user_feedback_count: "negative_user_feedback_count"
+            average_confidence_score: "average_confidence_score"
+            positive_user_feedback_count: "positive_user_feedback_count"
+        average_stack_processing_time: "average_stack_processing_time"
+  License:
+    properties:
+      unknown_licenses_count:
+        type: "integer"
+      unknown_licenses_list:
+        type: "array"
+        items:
+          type: "string"
+      conflict_licenses_count:
+        type: "integer"
+      suggested_stack_licenses_count:
+        type: "integer"
+    title: "License data"
+    description: "Aggregated license details for stack analyses"
+    example:
+      suggested_stack_licenses_count: 3
+      unknown_licenses_count: 7
+      conflict_licenses_count: 9
+      unknown_licenses_list:
+      - "unknown_licenses_list"
+      - "unknown_licenses_list"
+  Security:
+    properties:
+      vulnerable_stacks_count:
+        type: "integer"
+      highly_vulnerable_stacks_count:
+        type: "integer"
+    title: "Security vulnerability data"
+    description: "Security vulnerability data"
+    example:
+      highly_vulnerable_stacks_count: 4
+      vulnerable_stacks_count: 2
+  AggregatedData:
+    properties:
+      analyzed_stacks_count:
+        type: "integer"
+      analyzed_stacks_count_per_source:
+        $ref: "#/definitions/StackAnalysesCountPerSource"
+      unique_analyzed_stacks_count:
+        type: "integer"
+      average_stack_processing_time:
+        type: "string"
+      unknown_dependencies_ingested:
+        type: "integer"
+      license:
+        $ref: "#/definitions/License"
+      security:
+        $ref: "#/definitions/Security"
+      recommendation:
+        $ref: "#/definitions/Recommendation"
+    title: "Aggregated stack analyses data"
+    description: "Aggregated stack analyses data across all supported ecosystems"
+    example:
+      license:
+        suggested_stack_licenses_count: 3
+        unknown_licenses_count: 7
+        conflict_licenses_count: 9
+        unknown_licenses_list:
+        - "unknown_licenses_list"
+        - "unknown_licenses_list"
+      security:
+        highly_vulnerable_stacks_count: 4
+        vulnerable_stacks_count: 2
+      analyzed_stacks_count: 5
+      analyzed_stacks_count_per_source:
+        vscode: "vscode"
+        osio: "osio"
+      unknown_dependencies_ingested: 2
+      unique_analyzed_stacks_count: 5
+      recommendation:
+        companion:
+          recommendation_count: "recommendation_count"
+          maximum_confidence_score: "maximum_confidence_score"
+          negative_user_feedback_count: "negative_user_feedback_count"
+          average_confidence_score: "average_confidence_score"
+          positive_user_feedback_count: "positive_user_feedback_count"
+      average_stack_processing_time: "average_stack_processing_time"
+  OverviewReport:
+    properties:
+      meta:
+        $ref: "#/definitions/Metadata"
+      generation_time:
+        type: "string"
+        description: "UTC time of the report generation in the format yyyy-mm-ddThh:mm:ss"
+      from:
+        type: "string"
+        description: "time since when the stack analyses requests are to be considered\
+          \ for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss"
+      to:
+        type: "string"
+        description: "time until which the stack analyses requests are to be considered\
+          \ for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss"
+      ecosystem_data:
+        $ref: "#/definitions/EcosystemData"
+      aggregated_data:
+        $ref: "#/definitions/AggregatedData"
+    title: "Stack Analyses Overview Report"
+    description: "Stack Analyses Overview Report"
+    example:
+      ecosystem_data:
+        maven:
+          analyzed_stacks_count: "analyzed_stacks_count"
+          analyzed_stacks_count_per_source:
+            vscode: "vscode"
+            osio: "osio"
+          top_dependencies_list:
+          - "top_dependencies_list"
+          - "top_dependencies_list"
+          unknown_dependencies_ingested: 1
+          top_large_stacks:
+          - dependencies_count: 6
+            processing_time: "processing_time"
+            dependencies_list:
+            - "dependencies_list"
+            - "dependencies_list"
+          - dependencies_count: 6
+            processing_time: "processing_time"
+            dependencies_list:
+            - "dependencies_list"
+            - "dependencies_list"
+          unique_analyzed_stacks_count: 0
+          recommendation:
+            companion:
+              recommendation_count: "recommendation_count"
+              maximum_confidence_score: "maximum_confidence_score"
+              negative_user_feedback_count: "negative_user_feedback_count"
+              average_confidence_score: "average_confidence_score"
+              positive_user_feedback_count: "positive_user_feedback_count"
+          average_stack_processing_time: "average_stack_processing_time"
+        pypi:
+          analyzed_stacks_count: "analyzed_stacks_count"
+          analyzed_stacks_count_per_source:
+            vscode: "vscode"
+            osio: "osio"
+          top_dependencies_list:
+          - "top_dependencies_list"
+          - "top_dependencies_list"
+          unknown_dependencies_ingested: 1
+          top_large_stacks:
+          - dependencies_count: 6
+            processing_time: "processing_time"
+            dependencies_list:
+            - "dependencies_list"
+            - "dependencies_list"
+          - dependencies_count: 6
+            processing_time: "processing_time"
+            dependencies_list:
+            - "dependencies_list"
+            - "dependencies_list"
+          unique_analyzed_stacks_count: 0
+          recommendation:
+            companion:
+              recommendation_count: "recommendation_count"
+              maximum_confidence_score: "maximum_confidence_score"
+              negative_user_feedback_count: "negative_user_feedback_count"
+              average_confidence_score: "average_confidence_score"
+              positive_user_feedback_count: "positive_user_feedback_count"
+          average_stack_processing_time: "average_stack_processing_time"
+        npm:
+          analyzed_stacks_count: "analyzed_stacks_count"
+          analyzed_stacks_count_per_source:
+            vscode: "vscode"
+            osio: "osio"
+          top_dependencies_list:
+          - "top_dependencies_list"
+          - "top_dependencies_list"
+          unknown_dependencies_ingested: 1
+          top_large_stacks:
+          - dependencies_count: 6
+            processing_time: "processing_time"
+            dependencies_list:
+            - "dependencies_list"
+            - "dependencies_list"
+          - dependencies_count: 6
+            processing_time: "processing_time"
+            dependencies_list:
+            - "dependencies_list"
+            - "dependencies_list"
+          unique_analyzed_stacks_count: 0
+          recommendation:
+            companion:
+              recommendation_count: "recommendation_count"
+              maximum_confidence_score: "maximum_confidence_score"
+              negative_user_feedback_count: "negative_user_feedback_count"
+              average_confidence_score: "average_confidence_score"
+              positive_user_feedback_count: "positive_user_feedback_count"
+          average_stack_processing_time: "average_stack_processing_time"
+      meta:
+        report_version: "report_version"
+      aggregated_data:
+        license:
+          suggested_stack_licenses_count: 3
+          unknown_licenses_count: 7
+          conflict_licenses_count: 9
+          unknown_licenses_list:
+          - "unknown_licenses_list"
+          - "unknown_licenses_list"
+        security:
+          highly_vulnerable_stacks_count: 4
+          vulnerable_stacks_count: 2
+        analyzed_stacks_count: 5
+        analyzed_stacks_count_per_source:
+          vscode: "vscode"
+          osio: "osio"
+        unknown_dependencies_ingested: 2
+        unique_analyzed_stacks_count: 5
+        recommendation:
+          companion:
+            recommendation_count: "recommendation_count"
+            maximum_confidence_score: "maximum_confidence_score"
+            negative_user_feedback_count: "negative_user_feedback_count"
+            average_confidence_score: "average_confidence_score"
+            positive_user_feedback_count: "positive_user_feedback_count"
+        average_stack_processing_time: "average_stack_processing_time"
+      generation_time: "generation_time"
+      from: "from"
+      to: "to"

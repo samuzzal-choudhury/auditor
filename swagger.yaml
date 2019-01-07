@@ -26,7 +26,7 @@ paths:
       responses:
         '200':
           description: Service is ready
-  '/stack-analyses-overview/{from}/{to}':
+  '/stack-analyses-overview/{start_ts}/{end_ts}':
     get:
       tags:
         - Scan Services
@@ -34,12 +34,12 @@ paths:
       summary: Get overview report for the stack analyses performed during a certain period
       parameters:
         - in: path
-          name: from
+          name: start_ts
           type: string
           required: true
           description: The time since when the stack analyses requests are to be considered for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss.
         - in: path
-          name: to
+          name: end_ts
           type: string
           required: true
           description: The time until which the stack analyses requests are to be considered for reporting. The time has to be in UTC in the format yyyy-mm-ddThh:mm:ss.
